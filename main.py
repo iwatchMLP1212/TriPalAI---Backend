@@ -118,6 +118,7 @@ def main():
         if message.lower() == "quit":
             break
         answer = get_answer(message)
+    print("AI:", answer)
 
 if __name__ == "__main__":
     main()
