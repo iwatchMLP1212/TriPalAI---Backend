@@ -18,6 +18,31 @@ DB_CONFIG = {
     "port": os.getenv("DB_PORT", 5432),
 }
 
+def validate_flashcards_format(data):
+    # Kiểm tra xem dữ liệu có đúng định dạng không
+    if not isinstance(data, dict):
+        return False, "Dữ liệu phải là một đối tượng JSON"
+    
+    required_keys = ["flashcards", "title", "description"]
+    
+    # Kiểm tra các trường cần thiết
+    for key in required_keys:
+        if key not in data:
+            return False, f"Thiếu trường '{key}' trong dữ liệu"
+    
+    # Kiểm tra định dạng flashcards
+    flashcards = data.get("flashcards")
+    if not isinstance(flashcards, list):
+        return False, "'flashcards' phải là một mảng"
+    
+    for idx, fc in enumerate(flashcards):
+        if not isinstance(fc, dict):
+            return False, f"Phần tử thứ {idx + 1} trong flashcards phải là một đối tượng"
+        if "front" not in fc or "back" not in fc:
+            return False, f"Phần tử thứ {idx + 1} trong flashcards thiếu trường 'front' hoặc 'back'"
+    
+    return True, "Dữ liệu hợp lệ"
+
 def generate_flashcards_from_chat(chat_transcript: str, user_email: str):
     prompt = f"""
     Bạn là một công cụ học tập. Hãy thực hiện ba nhiệm vụ:
@@ -58,6 +83,11 @@ def generate_flashcards_from_chat(chat_transcript: str, user_email: str):
         )
         content = response.choices[0].message.content
         parsed = json.loads(content)
+
+        # Kiểm tra định dạng JSON
+        is_valid, validation_message = validate_flashcards_format(parsed)
+        if not is_valid:
+            return {"error": validation_message}
 
         if "flashcards" in parsed:
             flashcard_set_id = create_flashcard_set(user_email, parsed["flashcards"], parsed["title"], parsed["description"])

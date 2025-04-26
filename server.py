@@ -6,7 +6,10 @@ from flashcard import generate_flashcards_from_chat
 
 class Message(BaseModel):
     message: str
-    user_id: int
+
+class FlashcardRequiredFields(BaseModel):
+    message: str
+    user_email: str
 
 app = FastAPI()
 
@@ -28,8 +31,8 @@ async def generate_response(message: Message):
     return {"response": get_answer(message.message)}
 
 @app.post("/flashcard/")
-async def generate_flashcard(message: Message):
-    flashcards = generate_flashcards_from_chat(message.message, user_id=message.user_id)
+async def generate_flashcard(message: FlashcardRequiredFields):
+    flashcards = generate_flashcards_from_chat(message.message, user_email=message.user_email)
     return {"flashcards": flashcards}
 
 if __name__ == "__main__":
